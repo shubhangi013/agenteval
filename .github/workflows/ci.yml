@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --extra dev --locked
+      - run: uv run pytest
+      - run: uv run mypy --strict src/agenteval
+      - run: uv run ruff check src tests scripts examples
+
+  bench-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - name: Run benchmark smoke
+        env:
+          BENCH_LEVELS: "1"
+          BENCH_TASK_LIMIT: "3"
+        run: make bench
+      - uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-smoke
+          path: |
+            bench_report.md
+            runs/
+            traces/
+            disagreements/

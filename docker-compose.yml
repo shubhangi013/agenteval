@@ -1,0 +1,65 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+    volumes:
+      - redis-data:/data
+
+  api:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    ports:
+      - "8000:8000"
+    environment:
+      AGENTEVAL_REDIS_URL: redis://redis:6379/0
+      AGENTEVAL_TRACE_DIR: /app/traces
+      AGENTEVAL_LLM_PROVIDER: ${AGENTEVAL_LLM_PROVIDER:-mock}
+      AGENTEVAL_JUDGE_PROVIDER: ${AGENTEVAL_JUDGE_PROVIDER:-mock}
+      AGENTEVAL_OPENAI_API_KEY: ${AGENTEVAL_OPENAI_API_KEY:-}
+      AGENTEVAL_AZURE_OPENAI_ENDPOINT: ${AGENTEVAL_AZURE_OPENAI_ENDPOINT:-}
+      AGENTEVAL_AZURE_OPENAI_API_KEY: ${AGENTEVAL_AZURE_OPENAI_API_KEY:-}
+      AGENTEVAL_AZURE_OPENAI_DEPLOYMENT: ${AGENTEVAL_AZURE_OPENAI_DEPLOYMENT:-}
+      AGENTEVAL_AZURE_OPENAI_API_VERSION: ${AGENTEVAL_AZURE_OPENAI_API_VERSION:-2024-10-21}
+      AGENTEVAL_ANTHROPIC_API_KEY: ${AGENTEVAL_ANTHROPIC_API_KEY:-}
+      AGENTEVAL_OLLAMA_BASE_URL: ${AGENTEVAL_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      AGENTEVAL_TOOL_TIMEOUT_S: ${AGENTEVAL_TOOL_TIMEOUT_S:-180}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./traces:/app/traces
+
+  worker:
+    build:
+      context: .
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    command: ["python", "-m", "agenteval.worker"]
+    environment:
+      AGENTEVAL_REDIS_URL: redis://redis:6379/0
+      AGENTEVAL_TRACE_DIR: /app/traces
+      AGENTEVAL_LLM_PROVIDER: ${AGENTEVAL_LLM_PROVIDER:-mock}
+      AGENTEVAL_JUDGE_PROVIDER: ${AGENTEVAL_JUDGE_PROVIDER:-mock}
+      AGENTEVAL_OPENAI_API_KEY: ${AGENTEVAL_OPENAI_API_KEY:-}
+      AGENTEVAL_AZURE_OPENAI_ENDPOINT: ${AGENTEVAL_AZURE_OPENAI_ENDPOINT:-}
+      AGENTEVAL_AZURE_OPENAI_API_KEY: ${AGENTEVAL_AZURE_OPENAI_API_KEY:-}
+      AGENTEVAL_AZURE_OPENAI_DEPLOYMENT: ${AGENTEVAL_AZURE_OPENAI_DEPLOYMENT:-}
+      AGENTEVAL_AZURE_OPENAI_API_VERSION: ${AGENTEVAL_AZURE_OPENAI_API_VERSION:-2024-10-21}
+      AGENTEVAL_ANTHROPIC_API_KEY: ${AGENTEVAL_ANTHROPIC_API_KEY:-}
+      AGENTEVAL_OLLAMA_BASE_URL: ${AGENTEVAL_OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      AGENTEVAL_TOOL_TIMEOUT_S: ${AGENTEVAL_TOOL_TIMEOUT_S:-180}
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./traces:/app/traces
+
+volumes:
+  redis-data:

@@ -1,0 +1,49 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+
+# Envs
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+.envrc
+
+# Local credentials
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+secrets.json
+secrets.yml
+secrets.yaml
+
+# Artifacts
+traces/
+runs/
+disagreements/
+bench_report.md
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Editor / OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+*.tmp
+*.bak
+*.swp
+*~
